@@ -12,22 +12,29 @@ import {
 } from "@mui/material";
 import { Apple, Visibility, VisibilityOff } from "@mui/icons-material";
 
-export default function MainLogin() {
+export default function MainRegister() {
   const [showPassword, setShowPassword] = useState(false);
+  const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = () => {
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const user = users.find((u) => u.email === email && u.password === password);
-    if (user) {
-      alert("Успешный вход!");
-      localStorage.setItem("currentUser", JSON.stringify(user)); // сохраняем текущего пользователя
-      navigate("/header"); // переходим на страницу после логина
-    } else {
-      alert("Неверный email или пароль!");
+  const handleRegister = () => {
+    if (!login || !email || !password) {
+      alert("Заполните все поля!");
+      return;
     }
+
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    if (users.some((user) => user.email === email)) {
+      alert("Пользователь с таким email уже существует!");
+      return;
+    }
+
+    users.push({ login, email, password });
+    localStorage.setItem("users", JSON.stringify(users));
+    alert("Регистрация успешна!");
+    navigate("/"); // переходим на страницу логина
   };
 
   return (
@@ -55,12 +62,20 @@ export default function MainLogin() {
         }}
       >
         <Typography variant="h5" sx={{ color: "white", mb: 1 }}>
-          Войти
+          Регистрация
         </Typography>
         <Typography variant="body2" sx={{ color: "white", mb: 3 }}>
           Добро пожаловать на сайт DevHub!
         </Typography>
 
+        <TextField
+          label="Логин"
+          variant="outlined"
+          fullWidth
+          sx={{ mb: 2, input: { color: "white" }, label: { color: "white" } }}
+          value={login}
+          onChange={(e) => setLogin(e.target.value)}
+        />
         <TextField
           label="Email"
           variant="outlined"
@@ -101,9 +116,9 @@ export default function MainLogin() {
             mb: 2,
             color: "white",
           }}
-          onClick={handleLogin}
+          onClick={handleRegister}
         >
-          Войти
+          Зарегистрироваться
         </Button>
 
         <Divider sx={{ my: 2, "&::before, &::after": { borderColor: "gray" }, color: "white" }}>
@@ -120,9 +135,9 @@ export default function MainLogin() {
         </Button>
 
         <Typography variant="body2" sx={{ mt: 3, color: "white" }}>
-          Нету аккаунта?{" "}
-          <RouterLink to="/registration" style={{ color: "#9d4edd", textDecoration: "none" }}>
-            Зарегистрироваться
+          Уже есть аккаунт?{" "}
+          <RouterLink to="/" style={{ color: "#9d4edd", textDecoration: "none" }}>
+            Войти
           </RouterLink>
         </Typography>
       </Paper>
