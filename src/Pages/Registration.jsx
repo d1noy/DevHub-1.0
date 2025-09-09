@@ -9,32 +9,64 @@ import {
   Divider,
   InputAdornment,
   IconButton,
+  Alert,
 } from "@mui/material";
 import { Apple, Visibility, VisibilityOff } from "@mui/icons-material";
+
+// Хэширование паролей (SHA-256)
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 export default function MainRegister() {
   const [showPassword, setShowPassword] = useState(false);
   const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const navigate = useNavigate();
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
+    setError("");
+    setSuccess("");
+
     if (!login || !email || !password) {
-      alert("Заполните все поля!");
+      setError("Заполните все поля!");
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    if (users.some((user) => user.email === email)) {
-      alert("Пользователь с таким email уже существует!");
+    // Простая валидация email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Введите корректный email!");
       return;
     }
 
-    users.push({ login, email, password });
-    localStorage.setItem("users", JSON.stringify(users));
-    alert("Регистрация успешна!");
-    navigate("/"); // переходим на страницу логина
+    try {
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+
+      if (users.some((user) => user.email === email)) {
+        setError("Пользователь с таким email уже существует!");
+        return;
+      }
+
+      const passwordHash = await hashPassword(password);
+
+      users.push({ login, email, passwordHash });
+      localStorage.setItem("users", JSON.stringify(users));
+
+      setSuccess("Регистрация успешна! Теперь можете войти.");
+      setTimeout(() => navigate("/"), 1500);
+    } catch (err) {
+      console.error("Ошибка при регистрации:", err);
+      setError("Ошибка системы. Попробуйте снова.");
+    }
   };
 
   return (
@@ -68,13 +100,24 @@ export default function MainRegister() {
           Добро пожаловать на сайт DevHub!
         </Typography>
 
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        {success && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {success}
+          </Alert>
+        )}
+
         <TextField
           label="Логин"
           variant="outlined"
           fullWidth
           sx={{ mb: 2, input: { color: "white" }, label: { color: "white" } }}
           value={login}
-          onChange={(e) => setLogin(e.target.value)}
+          onChange={(e) => setLogin(e.target.value.trim())}
         />
         <TextField
           label="Email"
@@ -82,7 +125,7 @@ export default function MainRegister() {
           fullWidth
           sx={{ mb: 2, input: { color: "white" }, label: { color: "white" } }}
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value.trim())}
         />
         <TextField
           label="Пароль"

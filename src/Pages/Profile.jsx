@@ -22,19 +22,66 @@ export default function Header() {
     // Информация о пользователе
     const user = { nickname: "D1noy", name: "Даниил" };
 
-    // Загружаем рейтинг для этого пользователя из localStorage
+    // Проверка доступности localStorage
+    const lsAvailable = (() => {
+        try {
+            const k = "__ls_test__";
+            localStorage.setItem(k, k);
+            localStorage.removeItem(k);
+            return true;
+        } catch {
+            return false;
+        }
+    })();
+
+    // Безопасная загрузка рейтинга
     const [rating, setRating] = useState(() => {
-        const saved = localStorage.getItem(`rating_${user.nickname}`);
-        return saved ? parseFloat(saved) : 4.5;
+        if (!lsAvailable) return 4.5;
+        try {
+            const saved = localStorage.getItem(`rating_${user.nickname}`);
+            if (saved !== null) {
+                const parsed = parseFloat(saved);
+                if (Number.isFinite(parsed) && parsed >= 0 && parsed <= 5) {
+                    return parsed;
+                }
+            }
+        } catch (err) {
+            console.error("Ошибка чтения localStorage:", err);
+        }
+        return 4.5;
     });
+
+    // Сохранение
+    const saveToStorage = (value) => {
+        if (!lsAvailable) return;
+        try {
+            localStorage.setItem(`rating_${user.nickname}`, String(value));
+        } catch (err) {
+            console.error("Ошибка записи в localStorage:", err);
+        }
+    };
+
+    // Обработка изменения рейтинга
+    const handleRatingChange = (_e, newValue) => {
+        if (typeof newValue !== "number" || !Number.isFinite(newValue)) return;
+        const clamped = Math.min(5, Math.max(0, newValue));
+        setRating(clamped);
+        saveToStorage(clamped);
+    };
+
+    // Сброс рейтинга
+    const handleReset = () => {
+        setRating(4.5);
+        if (!lsAvailable) return;
+        try {
+            localStorage.removeItem(`rating_${user.nickname}`);
+        } catch (err) {
+            console.error("Ошибка удаления из localStorage:", err);
+        }
+    };
 
     const handleClick = (e) => setAnchorEl(e.currentTarget);
     const handleClose = () => setAnchorEl(null);
-
-    const handleRatingChange = (newRating) => {
-        setRating(newRating);
-        localStorage.setItem(`rating_${user.nickname}`, newRating);
-    };
 
     const skillStyle = {
         backgroundColor: "rgba(255,255,255,0.15)",
@@ -191,14 +238,25 @@ export default function Header() {
                                     <Typography sx={{ color: "#fff", fontSize: "28px", fontWeight: "bold" }}>{user.nickname}</Typography>
                                     <Typography sx={{ color: "#ddd", fontSize: "16px", mb: 1 }}>Frontend Developer</Typography>
 
+                                    {/* Безопасный рейтинг */}
                                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                         <Rating
                                             value={rating}
                                             precision={0.5}
-                                            onChange={(e, newValue) => handleRatingChange(newValue)}
+                                            onChange={handleRatingChange}
                                             sx={{ color: "#ffeb3b" }}
                                         />
-                                        <Typography sx={{ color: "#fff" }}>{rating.toFixed(1)}/5.0</Typography>
+                                        <Typography sx={{ color: "#fff" }}>
+                                            {typeof rating === "number" ? rating.toFixed(1) : "—"}/5.0
+                                        </Typography>
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            onClick={handleReset}
+                                            sx={{ ml: 2, color: "#fff", borderColor: "rgba(255,255,255,0.5)" }}
+                                        >
+                                            Сброс
+                                        </Button>
                                     </Box>
 
                                     <Button

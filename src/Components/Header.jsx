@@ -96,7 +96,7 @@ export default function Header() {
               InputProps={{ startAdornment: <SearchIcon sx={{ color: "rgba(255,255,255,0.7)", mr: 1 }} /> }}
               sx={{ mb: 6, borderRadius: "12px", backgroundColor: "rgba(255,255,255,0.1)", input: { color: "#fff", padding: "10px" }, "& .MuiOutlinedInput-root": { borderRadius: "12px", "& fieldset": { borderColor: "rgba(255,255,255,0.3)" }, "&.Mui-focused fieldset": { borderColor: "transparent", boxShadow: "0 0 8px rgba(255,255,255,0.3)" } } }}
             />
-            {[{ label: "Главная", link: "/header" }, { label: "Мои проекты", link: "/projects" }, { label: "Сообщения", link: "/about" }, { label: "Музыка", link: "/about" }, { label: "Настройки", link: "/about" }].map((item, i) => (
+            {[{ label: "Главная", link: "/header" }, { label: "Мои проекты", link: "#" }, { label: "Сообщения", link: "#" }, { label: "Музыка", link: "#" }, { label: "Настройки", link: "#" }].map((item, i) => (
               <Typography key={i} component={Link} to={item.link} sx={{ width: "100%", textAlign: "center", color: "#fff", textDecoration: "none", fontWeight: 500, fontSize: "16px", px: 2, py: 1.5, borderRadius: "10px", transition: "all 0.25s ease", "&:hover": { backgroundColor: "rgba(255,255,255,0.2)", color: "#e0c8ff", transform: "scale(1.03)", cursor: "pointer" } }}>{item.label}</Typography>
             ))}
           </Box>
